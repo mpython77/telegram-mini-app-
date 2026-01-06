@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Omadingizni Sinab Ko'ring</title>
+    <title>Test Your Luck</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -115,12 +115,12 @@
 </head>
 <body>
     <div class="container">
-        <h1>🍀 Omad O'yini</h1>
-        <p class="subtitle">Tugmani bosing va omadingizni bilib oling!</p>
+        <h1>🍀 Luck Game</h1>
+        <p class="subtitle">Press the button and discover your luck!</p>
         
         <div class="luck-display" id="luckDisplay">?</div>
         
-        <button class="button" onclick="checkLuck()">Omadni Sinash</button>
+        <button class="button" onclick="checkLuck()">Test Your Luck</button>
         
         <div class="message" id="message"></div>
         <div class="emoji" id="emoji"></div>
@@ -129,59 +129,59 @@
     </div>
 
     <script>
-        // Telegram Web App SDK ni ishga tushirish
+        // Initialize Telegram Web App SDK
         let tg = window.Telegram.WebApp;
         tg.expand();
         
-        // Foydalanuvchi ma'lumotlarini ko'rsatish
+        // Display user information
         if (tg.initDataUnsafe.user) {
             let user = tg.initDataUnsafe.user;
             document.getElementById('userInfo').innerHTML = 
-                `👤 Salom, ${user.first_name}!`;
+                `👤 Hello, ${user.first_name}!`;
         }
 
         function checkLuck() {
-            // Tasodifiy raqam (1-100)
+            // Random number (1-100)
             let luck = Math.floor(Math.random() * 100) + 1;
             
             let display = document.getElementById('luckDisplay');
             let message = document.getElementById('message');
             let emoji = document.getElementById('emoji');
             
-            // Animatsiya
+            // Animation
             display.classList.add('animate');
             display.textContent = luck;
             
-            // Xabar va emoji
+            // Message and emoji based on luck score
             if (luck >= 90) {
-                message.textContent = "Ajoyib! Bugun omading keldi! 🎉";
+                message.textContent = "Amazing! You're incredibly lucky today! 🎉";
                 emoji.textContent = "🌟";
                 tg.HapticFeedback.notificationOccurred('success');
             } else if (luck >= 70) {
-                message.textContent = "Yaxshi natija! Omading yoqimli!";
+                message.textContent = "Great result! Your luck is shining!";
                 emoji.textContent = "😊";
                 tg.HapticFeedback.notificationOccurred('success');
             } else if (luck >= 50) {
-                message.textContent = "Yomon emas, o'rtacha omad!";
+                message.textContent = "Not bad, average luck!";
                 emoji.textContent = "🙂";
                 tg.HapticFeedback.notificationOccurred('warning');
             } else if (luck >= 30) {
-                message.textContent = "Biroz past, yana urinib ko'ring!";
+                message.textContent = "A bit low, try again!";
                 emoji.textContent = "😐";
                 tg.HapticFeedback.notificationOccurred('warning');
             } else {
-                message.textContent = "Bugun omading yo'q ekan...";
+                message.textContent = "Not your lucky day...";
                 emoji.textContent = "😢";
                 tg.HapticFeedback.notificationOccurred('error');
             }
             
-            // Animatsiyani olib tashlash
+            // Remove animation
             setTimeout(() => {
                 display.classList.remove('animate');
             }, 500);
         }
         
-        // Telegram ranglarini qo'llash (ixtiyoriy)
+        // Apply Telegram theme colors (optional)
         if (tg.themeParams.bg_color) {
             document.body.style.background = tg.themeParams.bg_color;
         }
