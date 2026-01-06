@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omadingizni Sinab Ko'ring</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .luck-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 72px;
+            font-weight: bold;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 30px 0;
+            min-height: 160px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+        }
+
+        .luck-display.animate {
+            animation: pulse 0.5s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+            font-weight: 500;
+            min-height: 30px;
+        }
+
+        .emoji {
+            font-size: 40px;
+            margin-top: 10px;
+        }
+
+        .user-info {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍀 Omad O'yini</h1>
+        <p class="subtitle">Tugmani bosing va omadingizni bilib oling!</p>
+        
+        <div class="luck-display" id="luckDisplay">?</div>
+        
+        <button class="button" onclick="checkLuck()">Omadni Sinash</button>
+        
+        <div class="message" id="message"></div>
+        <div class="emoji" id="emoji"></div>
+        
+        <div class="user-info" id="userInfo"></div>
+    </div>
+
+    <script>
+        // Telegram Web App SDK ni ishga tushirish
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        
+        // Foydalanuvchi ma'lumotlarini ko'rsatish
+        if (tg.initDataUnsafe.user) {
+            let user = tg.initDataUnsafe.user;
+            document.getElementById('userInfo').innerHTML = 
+                `👤 Salom, ${user.first_name}!`;
+        }
+
+        function checkLuck() {
+            // Tasodifiy raqam (1-100)
+            let luck = Math.floor(Math.random() * 100) + 1;
+            
+            let display = document.getElementById('luckDisplay');
+            let message = document.getElementById('message');
+            let emoji = document.getElementById('emoji');
+            
+            // Animatsiya
+            display.classList.add('animate');
+            display.textContent = luck;
+            
+            // Xabar va emoji
+            if (luck >= 90) {
+                message.textContent = "Ajoyib! Bugun omading keldi! 🎉";
+                emoji.textContent = "🌟";
+                tg.HapticFeedback.notificationOccurred('success');
+            } else if (luck >= 70) {
+                message.textContent = "Yaxshi natija! Omading yoqimli!";
+                emoji.textContent = "😊";
+                tg.HapticFeedback.notificationOccurred('success');
+            } else if (luck >= 50) {
+                message.textContent = "Yomon emas, o'rtacha omad!";
+                emoji.textContent = "🙂";
+                tg.HapticFeedback.notificationOccurred('warning');
+            } else if (luck >= 30) {
+                message.textContent = "Biroz past, yana urinib ko'ring!";
+                emoji.textContent = "😐";
+                tg.HapticFeedback.notificationOccurred('warning');
+            } else {
+                message.textContent = "Bugun omading yo'q ekan...";
+                emoji.textContent = "😢";
+                tg.HapticFeedback.notificationOccurred('error');
+            }
+            
+            // Animatsiyani olib tashlash
+            setTimeout(() => {
+                display.classList.remove('animate');
+            }, 500);
+        }
+        
+        // Telegram ranglarini qo'llash (ixtiyoriy)
+        if (tg.themeParams.bg_color) {
+            document.body.style.background = tg.themeParams.bg_color;
+        }
+    </script>
+</body>
+</html>
