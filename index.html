@@ -331,17 +331,19 @@
         // Load user stats
         async function loadUserStats() {
             try {
-                const result = await window.storage.get(`user_${currentUser.id}`);
-                if (result && result.value) {
-                    userStats = JSON.parse(result.value);
-                    document.getElementById('bestScore').textContent = userStats.bestScore;
-                    document.getElementById('totalGames').textContent = userStats.totalGames;
+                const response = await fetch(`/api/user-stats/${currentUser.id}`);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    userStats = result.data;
+                    document.getElementById('bestScore').textContent = userStats.bestScore || 0;
+                    document.getElementById('totalGames').textContent = userStats.totalGames || 0;
                 } else {
                     document.getElementById('bestScore').textContent = '0';
                     document.getElementById('totalGames').textContent = '0';
                 }
             } catch (error) {
-                console.log('No previous stats found');
+                console.log('Error loading stats:', error);
                 document.getElementById('bestScore').textContent = '0';
                 document.getElementById('totalGames').textContent = '0';
             }
@@ -349,29 +351,34 @@
 
         // Save user stats
         async function saveUserStats(score) {
-            userStats.totalGames++;
-            if (score > userStats.bestScore) {
+            userStats.totalGames = (userStats.totalGames || 0) + 1;
+            if (score > (userStats.bestScore || 0)) {
                 userStats.bestScore = score;
             }
             
             try {
-                await window.storage.set(`user_${currentUser.id}`, JSON.stringify(userStats));
+                const response = await fetch('/api/save-stats', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: currentUser.id,
+                        firstName: currentUser.firstName,
+                        lastName: currentUser.lastName,
+                        username: currentUser.username,
+                        score: score,
+                        totalGames: userStats.totalGames,
+                        bestScore: userStats.bestScore
+                    })
+                });
                 
-                // Save to global leaderboard
-                const leaderboardEntry = {
-                    id: currentUser.id,
-                    firstName: currentUser.firstName,
-                    lastName: currentUser.lastName,
-                    username: currentUser.username,
-                    score: userStats.bestScore,
-                    totalGames: userStats.totalGames,
-                    timestamp: Date.now()
-                };
+                const result = await response.json();
                 
-                await window.storage.set(`leaderboard_${currentUser.id}`, JSON.stringify(leaderboardEntry), true);
-                
-                document.getElementById('bestScore').textContent = userStats.bestScore;
-                document.getElementById('totalGames').textContent = userStats.totalGames;
+                if (result.success) {
+                    document.getElementById('bestScore').textContent = userStats.bestScore;
+                    document.getElementById('totalGames').textContent = userStats.totalGames;
+                }
             } catch (error) {
                 console.error('Error saving stats:', error);
             }
@@ -428,9 +435,10 @@
             content.innerHTML = '<div class="loading">Loading leaderboard...</div>';
             
             try {
-                const result = await window.storage.list('leaderboard_', true);
+                const response = await fetch('/api/leaderboard');
+                const result = await response.json();
                 
-                if (!result || !result.keys || result.keys.length === 0) {
+                if (!result.success || !result.data || result.data.length === 0) {
                     content.innerHTML = `
                         <div class="empty-state">
                             <div class="empty-state-icon">🏆</div>
@@ -440,19 +448,7 @@
                     return;
                 }
                 
-                const leaderboardData = [];
-                for (const key of result.keys) {
-                    try {
-                        const data = await window.storage.get(key, true);
-                        if (data && data.value) {
-                            leaderboardData.push(JSON.parse(data.value));
-                        }
-                    } catch (e) {
-                        console.error('Error loading entry:', e);
-                    }
-                }
-                
-                leaderboardData.sort((a, b) => b.score - a.score);
+                const leaderboardData = result.data;
                 
                 let html = '<div class="leaderboard">';
                 leaderboardData.forEach((entry, index) => {
@@ -474,7 +470,7 @@
                                 <div class="user-name">${userName} ${isCurrentUser ? '(You)' : ''}</div>
                                 <div class="user-score">${entry.totalGames} games played</div>
                             </div>
-                            <div class="score-badge">${entry.score}</div>
+                            <div class="score-badge">${entry.bestScore}</div>
                         </div>
                     `;
                 });
