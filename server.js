@@ -21,22 +21,3 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server is running on port ${PORT}`);
   console.log(`🌐 Visit: http://localhost:${PORT}`);
 });
-```
-
-## 📁 File 4: `.gitignore`
-```
-node_modules/
-.env
-*.log
-.DS_Store
-```
-
-## 🚀 Deployment Steps:
-
-### 1️⃣ **Create all files in your project folder:**
-```
-my-telegram-app/
-├── index.html
-├── package.json
-├── server.js
-└── .gitignore
