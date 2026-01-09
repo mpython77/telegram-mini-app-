@@ -1,3 +1,7 @@
+console.log('🚀 INITIALIZING SERVER...');
+console.log('Environment:', process.env.NODE_ENV);
+console.log('Port:', process.env.PORT);
+
 require('dotenv').config();
 
 // Catch unexpected errors immediately
