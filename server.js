@@ -1,4 +1,15 @@
 require('dotenv').config();
+
+// Catch unexpected errors immediately
+process.on('uncaughtException', (error) => {
+  console.error('🔥 CRITICAL STARTUP ERROR:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('🔥 UNHANDLED PROMISE REJECTION:', reason);
+});
+
 const express = require('express');
 const path = require('path');
 const helmet = require('helmet');
