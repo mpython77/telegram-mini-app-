@@ -62,40 +62,43 @@ const transports = [
 
 // Add file transports in production
 if (process.env.NODE_ENV !== 'test') {
-  // Error log
-  transports.push(
-    new DailyRotateFile({
-      filename: path.join('logs', 'error-%DATE%.log'),
-      datePattern: 'YYYY-MM-DD',
-      level: 'error',
-      maxSize: process.env.LOG_MAX_SIZE || '20m',
-      maxFiles: process.env.LOG_MAX_FILES || '14d',
-      format: format,
-    })
-  );
-
-  // Combined log
-  transports.push(
-    new DailyRotateFile({
-      filename: path.join('logs', 'combined-%DATE%.log'),
-      datePattern: 'YYYY-MM-DD',
-      maxSize: process.env.LOG_MAX_SIZE || '20m',
-      maxFiles: process.env.LOG_MAX_FILES || '14d',
-      format: format,
-    })
-  );
-
-  // HTTP log
-  transports.push(
-    new DailyRotateFile({
-      filename: path.join('logs', 'http-%DATE%.log'),
-      datePattern: 'YYYY-MM-DD',
-      level: 'http',
-      maxSize: process.env.LOG_MAX_SIZE || '20m',
-      maxFiles: process.env.LOG_MAX_FILES || '7d',
-      format: format,
-    })
-  );
+  // File logging disabled for Railway to prevent permission issues
+  /*
+    // Error log
+    transports.push(
+      new DailyRotateFile({
+        filename: path.join('logs', 'error-%DATE%.log'),
+        datePattern: 'YYYY-MM-DD',
+        level: 'error',
+        maxSize: process.env.LOG_MAX_SIZE || '20m',
+        maxFiles: process.env.LOG_MAX_FILES || '14d',
+        format: format,
+      })
+    );
+  
+    // Combined log
+    transports.push(
+      new DailyRotateFile({
+        filename: path.join('logs', 'combined-%DATE%.log'),
+        datePattern: 'YYYY-MM-DD',
+        maxSize: process.env.LOG_MAX_SIZE || '20m',
+        maxFiles: process.env.LOG_MAX_FILES || '14d',
+        format: format,
+      })
+    );
+  
+    // HTTP log
+    transports.push(
+      new DailyRotateFile({
+        filename: path.join('logs', 'http-%DATE%.log'),
+        datePattern: 'YYYY-MM-DD',
+        level: 'http',
+        maxSize: process.env.LOG_MAX_SIZE || '20m',
+        maxFiles: process.env.LOG_MAX_FILES || '7d',
+        format: format,
+      })
+    );
+  */
 }
 
 // Create logger instance
