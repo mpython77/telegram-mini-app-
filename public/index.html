@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🍀 Luck Game - Telegram Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation Tabs -->
+        <div class="tabs">
+            <button class="tab active" data-tab="game">
+                <span class="tab-icon">🎮</span>
+                <span class="tab-label">Game</span>
+            </button>
+            <button class="tab" data-tab="leaderboard">
+                <span class="tab-icon">🏆</span>
+                <span class="tab-label">Leaderboard</span>
+            </button>
+            <button class="tab" data-tab="achievements">
+                <span class="tab-icon">⭐</span>
+                <span class="tab-label">Achievements</span>
+            </button>
+            <button class="tab" data-tab="profile">
+                <span class="tab-icon">👤</span>
+                <span class="tab-label">Profile</span>
+            </button>
+        </div>
+
+        <!-- Game Tab -->
+        <div id="gameTab" class="tab-content active">
+            <div class="game-header">
+                <h1>🍀 Luck Game</h1>
+                <p class="subtitle">Test your luck and compete with players worldwide!</p>
+            </div>
+
+            <!-- Daily Challenge -->
+            <div class="daily-challenge" id="dailyChallengeCard" style="display: none;">
+                <div class="challenge-header">
+                    <span class="challenge-icon">🎯</span>
+                    <span class="challenge-title">Daily Challenge</span>
+                </div>
+                <div class="challenge-content">
+                    <p class="challenge-text" id="challengeText">Loading...</p>
+                    <button class="btn-claim" id="claimRewardBtn" style="display: none;">Claim Reward 🎁</button>
+                </div>
+            </div>
+
+            <!-- Luck Display -->
+            <div class="luck-display" id="luckDisplay">
+                <div class="luck-number">?</div>
+            </div>
+
+            <!-- Play Button -->
+            <button class="btn-play" id="playButton">
+                <span>🎲 Test Your Luck</span>
+            </button>
+
+            <!-- Result Message -->
+            <div class="result-message" id="resultMessage" style="display: none;">
+                <div class="result-emoji" id="resultEmoji"></div>
+                <div class="result-text" id="resultText"></div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-value" id="bestScore">0</div>
+                    <div class="stat-label">Best Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎮</div>
+                    <div class="stat-value" id="totalGames">0</div>
+                    <div class="stat-label">Games Played</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔥</div>
+                    <div class="stat-value" id="currentStreak">0</div>
+                    <div class="stat-label">Current Streak</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-value" id="achievementsCount">0</div>
+                    <div class="stat-label">Achievements</div>
+                </div>
+            </div>
+
+            <!-- New Achievement Notification -->
+            <div class="achievement-notification" id="achievementNotification" style="display: none;">
+                <div class="achievement-icon" id="achievementIcon"></div>
+                <div class="achievement-info">
+                    <div class="achievement-name" id="achievementName"></div>
+                    <div class="achievement-desc" id="achievementDesc"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboard Tab -->
+        <div id="leaderboardTab" class="tab-content">
+            <div class="tab-header">
+                <h2>🏆 Global Leaderboard</h2>
+                <p class="subtitle">Top players from around the world</p>
+            </div>
+
+            <div class="leaderboard-filter">
+                <button class="filter-btn active" data-filter="score">Best Score</button>
+                <button class="filter-btn" data-filter="games">Most Games</button>
+                <button class="filter-btn" data-filter="streak">Top Streak</button>
+            </div>
+
+            <div id="leaderboardList" class="leaderboard-list">
+                <div class="loading">Loading leaderboard...</div>
+            </div>
+        </div>
+
+        <!-- Achievements Tab -->
+        <div id="achievementsTab" class="tab-content">
+            <div class="tab-header">
+                <h2>⭐ Achievements</h2>
+                <p class="subtitle">Unlock achievements and show your skills</p>
+            </div>
+
+            <div class="achievement-progress">
+                <div class="progress-info">
+                    <span id="achievementProgressText">0/0 Unlocked</span>
+                    <span id="achievementProgressPercent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="achievementProgressFill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="achievements-section">
+                <h3 class="section-title">🔓 Unlocked</h3>
+                <div id="unlockedAchievements" class="achievements-grid">
+                    <div class="empty-state">No achievements unlocked yet</div>
+                </div>
+            </div>
+
+            <div class="achievements-section">
+                <h3 class="section-title">🔒 Locked</h3>
+                <div id="lockedAchievements" class="achievements-grid">
+                    <div class="loading">Loading achievements...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Tab -->
+        <div id="profileTab" class="tab-content">
+            <div class="tab-header">
+                <h2>👤 Profile</h2>
+            </div>
+
+            <div class="profile-card">
+                <div class="profile-avatar" id="profileAvatar">👤</div>
+                <div class="profile-name" id="profileName">Loading...</div>
+                <div class="profile-username" id="profileUsername"></div>
+                <div class="profile-rank" id="profileRank">
+                    <span class="rank-icon" id="rankIcon">🌱</span>
+                    <span class="rank-title" id="rankTitle">Novice</span>
+                </div>
+            </div>
+
+            <div class="profile-stats">
+                <div class="profile-stat">
+                    <span class="profile-stat-label">Best Score</span>
+                    <span class="profile-stat-value" id="profileBestScore">0</span>
+                </div>
+                <div class="profile-stat">
+                    <span class="profile-stat-label">Total Games</span>
+                    <span class="profile-stat-value" id="profileTotalGames">0</span>
+                </div>
+                <div class="profile-stat">
+                    <span class="profile-stat-label">Total Points</span>
+                    <span class="profile-stat-value" id="profileTotalPoints">0</span>
+                </div>
+                <div class="profile-stat">
+                    <span class="profile-stat-label">Current Streak</span>
+                    <span class="profile-stat-value" id="profileCurrentStreak">0 days</span>
+                </div>
+                <div class="profile-stat">
+                    <span class="profile-stat-label">Longest Streak</span>
+                    <span class="profile-stat-value" id="profileLongestStreak">0 days</span>
+                </div>
+                <div class="profile-stat">
+                    <span class="profile-stat-label">Global Rank</span>
+                    <span class="profile-stat-value" id="profileGlobalRank">#-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/game.js"></script>
+    <script src="/js/leaderboard.js"></script>
+</body>
+</html>
