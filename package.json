@@ -2,14 +2,16 @@
   "name": "ultimate-telegram-mini-app",
   "version": "2.0.0",
   "description": "Ultimate Telegram Mini App - 10000x Better Gaming Experience with 7 Game Modes, Real-time Multiplayer, Social Features, and Advanced Economy",
-  "main": "src/server.js",
+  "main": "server.js",
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
   },
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "setup": "bash setup.sh",
+    "deploy": "bash railway-deploy.sh",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
@@ -23,7 +25,12 @@
     "lint": "eslint src/**/*.js",
     "format": "prettier --write \"src/**/*.js\"",
     "logs": "railway logs",
-    "deploy": "railway up"
+    "railway:login": "railway login",
+    "railway:init": "railway init",
+    "railway:add": "railway add",
+    "railway:up": "railway up",
+    "railway:status": "railway status",
+    "railway:vars": "railway variables"
   },
   "keywords": [
     "telegram",

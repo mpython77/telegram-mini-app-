@@ -1,273 +1,291 @@
-# 🍀 Telegram Mini App - Luck Game
+# 🎮 Ultimate Telegram Mini App
 
-Professional Telegram Mini App with complete features: game mechanics, leaderboard, achievements, daily challenges, and admin panel.
+**10000x Better Gaming Experience** - Professional Telegram Mini App with 7 Game Modes, PostgreSQL + Prisma, Real-time Features, and Complete Backend Infrastructure.
 
-## ✨ Features
+## 🚀 QUICK START (1 Command!)
 
-### 🎮 Game Features
-- **Luck Testing**: Test your luck and get scores from 1-100
-- **Daily Challenges**: Complete daily challenges for bonus rewards
-- **Real-time Stats**: Track your best score, total games, and current streak
-- **Haptic Feedback**: Interactive feedback for Telegram app users
+```bash
+npm run setup
+```
 
-### 🏆 Leaderboard System
-- **Multiple Rankings**: Sort by best score, most games, or current streak
-- **Global Ranking**: See where you stand among all players
-- **Real-time Updates**: Instant leaderboard updates after each game
+That's it! The setup script will:
+- ✅ Install all dependencies
+- ✅ Generate Prisma client
+- ✅ Create .env with secure credentials
+- ✅ Ask for Telegram Bot Token
+- ✅ Setup Railway PostgreSQL (optional)
+- ✅ Run database migrations
+- ✅ Configure everything automatically
 
-### ⭐ Achievement System
-- **10+ Achievements**: Unlock achievements by reaching milestones
-- **Progress Tracking**: Visual progress bar showing completion percentage
-- **Instant Notifications**: Get notified when you unlock new achievements
+## 🎯 What You Need
 
-### 👤 User Profiles
-- **Detailed Stats**: View comprehensive player statistics
-- **Rank Badges**: Earn rank badges based on performance
-- **Streak Tracking**: Monitor daily play streaks
+Just 2 things:
 
-### 🔧 Admin Panel
-- **Dashboard**: View system statistics and analytics
-- **User Management**: Browse and manage all users
-- **Game Monitoring**: Track all games played
-- **Top Players**: View leaderboard of best players
+### 1. **Telegram Bot Token** 🤖
+1. Open Telegram
+2. Search for `@BotFather`
+3. Send `/newbot`
+4. Follow instructions
+5. Copy the token
 
-## 🚀 Installation
+### 2. **Railway PostgreSQL** 🗄️
+The setup script will handle this automatically! Just say "yes" when prompted.
 
-### Prerequisites
-- Node.js (v14+)
-- npm or yarn
+## 📦 Manual Setup (Alternative)
 
-### Setup
+If you prefer manual setup:
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd telegram-mini-app-
-   ```
+```bash
+# 1. Install dependencies
+npm install
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+# 2. Copy environment file
+cp .env.example .env
 
-3. **Configure environment**
-   ```bash
-   cp .env.example .env
-   # Edit .env and set your configuration
-   ```
+# 3. Edit .env and add:
+#    - DATABASE_URL (from Railway)
+#    - TELEGRAM_BOT_TOKEN
+nano .env
 
-4. **Start the server**
-   ```bash
-   npm start
-   ```
+# 4. Generate Prisma Client
+npm run prisma:generate
 
-   For development with auto-reload:
-   ```bash
-   npm run dev
-   ```
+# 5. Push database schema
+npm run db:push
 
-The server will start on `http://localhost:3000`
+# 6. Start server
+npm run dev
+```
 
-## 📁 Project Structure
+## 🎮 7 Game Modes
+
+| Game | Description | Features |
+|------|-------------|----------|
+| 🍀 **LUCK** | Random luck generator (1-100) | Provably fair, crypto hashing |
+| 🎰 **SLOTS** | 3x3 Slot machine | 8 symbols, multiple paylines |
+| 🎡 **SPIN** | Wheel of Fortune | 10 segments with multipliers |
+| 🎲 **DICE** | Dice prediction game | Higher/Lower/Equal predictions |
+| 🪙 **FLIP** | Coin flip | Heads/Tails, 1.98x multiplier |
+| 🃏 **CARDS** | Card guessing game | Higher/Lower/Equal card values |
+| 🎫 **SCRATCH** | Scratch card lottery | 3x3 grid with prizes |
+
+## 🚂 Deploy to Railway.app
+
+```bash
+npm run deploy
+```
+
+This automated script will:
+- ✅ Install Railway CLI (if needed)
+- ✅ Login to Railway
+- ✅ Create/link project
+- ✅ Add PostgreSQL database
+- ✅ Set environment variables
+- ✅ Run database migration
+- ✅ Deploy your app
+- ✅ Generate public URL
+
+**That's it!** Your app will be LIVE in minutes! 🚀
+
+## 📡 API Endpoints
+
+### User Management
+```
+POST   /api/user/init                  - Initialize user
+GET    /api/user/:userId/profile       - Get profile
+GET    /api/user/:userId/stats         - Get stats
+GET    /api/user/:userId/referrals     - Get referrals
+```
+
+### Game Endpoints
+```
+POST   /api/game/play                  - Play any game
+GET    /api/game/:userId/history       - Game history
+GET    /api/game/:userId/stats         - Game stats
+GET    /api/game/popular               - Popular games
+GET    /api/game/bigwins               - Recent big wins
+GET    /api/game/cards/start           - Start CARDS game
+GET    /api/game/spin/segments         - Get SPIN segments
+```
+
+### Leaderboards
+```
+GET    /api/leaderboard/coins          - Top by coins
+GET    /api/leaderboard/games          - Top by games
+GET    /api/leaderboard/level          - Top by level
+GET    /api/leaderboard/streak         - Top by streak
+GET    /api/leaderboard/rank/:userId   - User rank
+```
+
+### Achievements
+```
+GET    /api/achievements                      - All achievements
+GET    /api/achievements/user/:userId         - User achievements
+GET    /api/achievements/user/:userId/progress - Progress
+```
+
+## 🧪 Testing with Postman
+
+Import the collection:
+```
+Telegram-Mini-App.postman_collection.json
+```
+
+Set variables:
+- `baseUrl`: Your server URL
+- `userId`: Your user UUID
+
+## 🛠️ Development Commands
+
+```bash
+npm run dev              # Development mode with nodemon
+npm start                # Production mode
+npm run setup            # Automated setup
+npm run deploy           # Deploy to Railway
+npm run prisma:studio    # Open Prisma Studio (DB GUI)
+npm run prisma:generate  # Generate Prisma Client
+npm run db:push          # Push schema to database
+npm run logs             # View Railway logs
+```
+
+## 🏗️ Architecture
 
 ```
 telegram-mini-app-/
-├── config/
-│   ├── config.js           # Application configuration
-│   └── database.js         # Database connection and setup
+├── server.js                    # Express server
 ├── src/
-│   ├── controllers/        # Request handlers
-│   │   ├── userController.js
-│   │   ├── gameController.js
-│   │   ├── leaderboardController.js
-│   │   └── adminController.js
-│   ├── models/             # Data models
-│   │   ├── User.js
-│   │   ├── Game.js
-│   │   ├── Achievement.js
-│   │   └── DailyChallenge.js
-│   ├── routes/             # API routes
-│   │   ├── api.js
-│   │   └── admin.js
-│   ├── middleware/         # Express middleware
-│   │   ├── auth.js
-│   │   └── errorHandler.js
-│   └── utils/              # Utility functions
-│       ├── logger.js
-│       └── helpers.js
-├── public/                 # Frontend files
-│   ├── index.html          # Main app
-│   ├── admin.html          # Admin panel
-│   ├── css/
-│   │   ├── main.css
-│   │   └── admin.css
-│   └── js/
-│       ├── app.js
-│       ├── game.js
-│       ├── leaderboard.js
-│       └── admin.js
-├── database/               # SQLite database
-├── server.js               # Main server file
-├── package.json
-└── README.md
+│   ├── config/                  # Configuration
+│   ├── database/                # Prisma client
+│   ├── engines/                 # 7 game engines
+│   │   ├── LuckEngine.js
+│   │   ├── SlotsEngine.js
+│   │   ├── SpinEngine.js
+│   │   ├── DiceEngine.js
+│   │   ├── FlipEngine.js
+│   │   ├── CardsEngine.js
+│   │   └── ScratchEngine.js
+│   ├── services/                # Business logic
+│   │   ├── UserService.js
+│   │   ├── GameService.js
+│   │   ├── LeaderboardService.js
+│   │   └── AchievementService.js
+│   ├── controllers/             # API controllers
+│   ├── middleware/              # Express middleware
+│   ├── routes/                  # API routes
+│   └── utils/                   # Utilities
+├── prisma/
+│   └── schema.prisma            # Database schema (25 tables)
+└── public/                      # Static files
 ```
 
-## 🔧 Configuration
+## 💾 Database
 
-Edit the `.env` file to configure your application:
+**PostgreSQL** with **Prisma ORM**
+- 25 tables
+- Full relations
+- Optimized indexes
+- Transaction support
 
-```env
-# Server
-PORT=3000
-NODE_ENV=production
+## 🔒 Security Features
 
-# Database
-DATABASE_PATH=./database/app.db
+- ✅ Helmet.js security headers
+- ✅ Rate limiting
+- ✅ CORS protection
+- ✅ JWT authentication
+- ✅ Input validation
+- ✅ SQL injection prevention
+- ✅ XSS protection
 
-# JWT Secret (change this!)
-JWT_SECRET=your-super-secret-jwt-key
+## 📊 Features
 
-# Admin Credentials
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=changeme123
+- ✅ **7 Game Modes** - All provably fair
+- ✅ **User System** - Registration, profiles, stats
+- ✅ **Achievements** - Unlock & track achievements
+- ✅ **Leaderboards** - Multiple leaderboard types
+- ✅ **Economy** - Coins, gems, levels, XP
+- ✅ **Referrals** - Invite friends & earn rewards
+- ✅ **Logging** - Winston with file rotation
+- ✅ **Validation** - Express-validator
+- ✅ **Error Handling** - Comprehensive error handling
 
-# Game Settings
-MAX_LUCK_VALUE=100
-MIN_LUCK_VALUE=1
-DAILY_CHALLENGES_COUNT=3
-```
+## 🚀 Performance
 
-## 📊 Database Schema
+- **Prisma ORM** - Fast database queries
+- **Connection Pooling** - Optimized connections
+- **Compression** - Response compression
+- **Logging** - Structured logging
+- **Caching Ready** - Redis support prepared
 
-The application uses SQLite with the following tables:
+## 🔮 Coming Soon
 
-- **users**: User profiles and statistics
-- **games**: Game history
-- **user_achievements**: Unlocked achievements
-- **daily_challenges**: Daily challenge tracking
-- **referrals**: Referral system (future feature)
+- 🔌 **WebSocket** - Real-time multiplayer
+- 🏪 **Shop System** - Buy items with coins/gems
+- 🏰 **Clans** - Create & join clans
+- 🏆 **Tournaments** - Compete for prizes
+- 📊 **Analytics** - Detailed statistics
+- 💳 **Payments** - In-app purchases
 
-## 🔌 API Endpoints
+## 📝 Environment Variables
 
-### User Endpoints
-- `POST /api/user` - Create or get user
-- `GET /api/user/:telegramId/stats` - Get user statistics
-- `GET /api/user/:telegramId/profile` - Get user profile
-
-### Game Endpoints
-- `POST /api/game/play` - Play game
-- `GET /api/game/:telegramId/history` - Get game history
-- `GET /api/game/:telegramId/achievements` - Get achievements
-- `GET /api/game/:telegramId/daily-challenge` - Get daily challenge
-- `POST /api/game/claim-challenge-reward` - Claim challenge reward
-
-### Leaderboard Endpoints
-- `GET /api/leaderboard` - Get leaderboard by score
-- `GET /api/leaderboard/games` - Get leaderboard by games
-- `GET /api/leaderboard/streak` - Get leaderboard by streak
-- `GET /api/leaderboard/user/:telegramId/rank` - Get user rank
-
-### Admin Endpoints
-- `POST /admin/login` - Admin login
-- `GET /admin/stats` - Dashboard statistics
-- `GET /admin/users` - Get all users
-- `GET /admin/games` - Get all games
-- `GET /admin/health` - System health check
-
-## 🎯 Achievements
-
-The game includes 10 achievements:
-
-1. **First Steps** 🎮 - Play your first game
-2. **Lucky Beginner** 🍀 - Score above 90
-3. **Game Enthusiast** 🎯 - Play 10 games
-4. **Lucky Champion** 🏆 - Score 95 or higher
-5. **Dedicated Player** ⭐ - Play 50 games
-6. **Perfect Luck** 💯 - Score exactly 100
-7. **Century Player** 💪 - Play 100 games
-8. **Streak Master** 🔥 - Play 7 days in a row
-9. **Top 10 Player** 🥇 - Reach top 10 on leaderboard
-10. **Legendary** 👑 - Play 500 games
-
-## 🔐 Security Features
-
-- JWT authentication for admin panel
-- Rate limiting on API endpoints
-- Helmet.js for security headers
-- Input sanitization
-- CORS protection
-- Environment variable protection
-
-## 🚀 Deployment
-
-### Deploy to Production
-
-1. **Set environment variables**
-   - Set `NODE_ENV=production`
-   - Use strong JWT secret
-   - Change admin credentials
-
-2. **Build and start**
-   ```bash
-   npm start
-   ```
-
-3. **Use process manager (PM2)**
-   ```bash
-   npm install -g pm2
-   pm2 start server.js --name luck-game
-   pm2 save
-   pm2 startup
-   ```
-
-### Deploy to Cloud Platforms
-
-- **Heroku**: Use Procfile with `web: node server.js`
-- **Railway**: Auto-detected Node.js project
-- **Vercel**: Configure as Express.js serverless function
-- **DigitalOcean**: Deploy as Node.js app
-
-## 🧪 Testing
+Key variables (auto-generated by setup):
 
 ```bash
-# Test health endpoint
-curl http://localhost:3000/health
-
-# Test admin login
-curl -X POST http://localhost:3000/admin/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
+DATABASE_URL=postgresql://...      # Railway PostgreSQL
+JWT_SECRET=<auto-generated>        # Secure random key
+ADMIN_PASSWORD=<auto-generated>    # Admin password
+TELEGRAM_BOT_TOKEN=<your-token>    # From @BotFather
 ```
 
-## 📱 Telegram Mini App Setup
+## 🐛 Troubleshooting
 
-1. Create a bot with [@BotFather](https://t.me/BotFather)
-2. Get your bot token
-3. Set up Mini App URL in bot settings
-4. Point the URL to your deployed application
+### Server won't start
+```bash
+rm -rf node_modules package-lock.json
+npm install
+npm run prisma:generate
+```
 
-## 🤝 Contributing
+### Database connection error
+```bash
+# Check DATABASE_URL in .env
+railway variables  # Get from Railway
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+# Or use local PostgreSQL
+createdb telegram_mini_app
+```
 
-## 📝 License
+### Prisma issues
+```bash
+npx prisma generate
+npx prisma db push
+```
 
-MIT License - feel free to use this project for any purpose.
+## 📚 Documentation
 
-## 🙏 Acknowledgments
+- **API Docs**: Use Postman collection
+- **Prisma Studio**: `npm run prisma:studio`
+- **Railway Dashboard**: `railway open`
 
-- Built with Express.js and SQLite
-- Telegram WebApp API integration
-- Modern responsive design
+## 🤝 Support
 
-## 📧 Support
+- GitHub Issues: [Report bugs](https://github.com/mpython77/telegram-mini-app-/issues)
+- Telegram: Contact @BotFather for bot help
 
-For issues and questions, please open an issue on GitHub.
+## 📄 License
+
+MIT License - Use freely!
+
+## 🎉 Credits
+
+Built with:
+- Express.js
+- Prisma ORM
+- PostgreSQL
+- Winston Logger
+- Railway.app
 
 ---
 
-**Made with ❤️ for the Telegram community**
+**Made with ❤️ for Telegram Mini App Developers**
+
+🚀 **Ready to deploy?** Run `npm run setup` and get started in minutes!
