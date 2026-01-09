@@ -1,0 +1,17 @@
+# Nixpacks Configuration for Railway
+# https://nixpacks.com/docs/configuration
+
+[phases.setup]
+nixPkgs = ["nodejs-18_x", "openssl"]
+
+[phases.install]
+cmds = ["npm install"]
+
+[phases.build]
+cmds = ["npm run prisma:generate"]
+
+[start]
+cmd = "npm run db:push && npm start"
+
+[variables]
+NODE_ENV = "production"
