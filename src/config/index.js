@@ -246,7 +246,8 @@ function validateConfig() {
   }
 
   if (missing.length > 0) {
-    throw new Error(`Missing required configuration: ${missing.join(', ')}`);
+    console.warn(`⚠️  Missing recommended configuration: ${missing.join(', ')}`);
+    console.warn('⚠️  Application may not function correctly without these variables.');
   }
 }
 
