@@ -1,1 +1,1 @@
-web: npm run db:push && npm start
+web: bash scripts/railway-start.sh

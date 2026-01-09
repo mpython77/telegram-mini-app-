@@ -83,43 +83,54 @@ app.use(errorHandler);
 
 // Initialize database and start server
 async function startServer() {
+  const PORT = process.env.PORT || 3000;
+
+  // Start server first (so health check works immediately)
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Server listening on port ${PORT}`);
+    logger.info(`🚀 Server running on port ${PORT}`);
+    logger.info(`📱 Environment: ${process.env.NODE_ENV || 'production'}`);
+  });
+
+  // Then connect to database (non-blocking)
   try {
-    // Connect to Prisma database
+    console.log('🔄 Connecting to database...');
     await connectDatabase();
+    console.log('✅ Database connected successfully');
     logger.info('✅ Database connected successfully');
+    logger.info(`🎮 Telegram Mini App ready!`);
+    logger.info(`💾 Database: PostgreSQL + Prisma`);
+  } catch (error) {
+    console.error('❌ Database connection failed:', error.message);
+    logger.error('❌ Database connection failed:', error);
+    logger.warn('⚠️ Server running without database connection');
+  }
 
-    // Start server
-    const PORT = process.env.PORT || 3000;
-    const server = app.listen(PORT, '0.0.0.0', () => {
-      logger.info(`🚀 Server running on port ${PORT}`);
-      logger.info(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
-      logger.info(`🎮 Telegram Mini App ready!`);
-      logger.info(`💾 Database: PostgreSQL + Prisma`);
-    });
-
-    // Graceful shutdown
-    const shutdown = async (signal) => {
-      logger.info(`${signal} received. Shutting down gracefully...`);
-      server.close(async () => {
+  // Graceful shutdown
+  const shutdown = async (signal) => {
+    console.log(`${signal} received. Shutting down...`);
+    logger.info(`${signal} received. Shutting down gracefully...`);
+    server.close(async () => {
+      try {
         await disconnectDatabase();
         logger.info('Server closed. Exiting process.');
         process.exit(0);
-      });
-
-      // Force shutdown after 10 seconds
-      setTimeout(() => {
-        logger.error('Forced shutdown after timeout');
+      } catch (error) {
+        logger.error('Error during shutdown:', error);
         process.exit(1);
-      }, 10000);
-    };
+      }
+    });
 
-    process.on('SIGINT', () => shutdown('SIGINT'));
-    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    // Force shutdown after 10 seconds
+    setTimeout(() => {
+      console.error('Forced shutdown after timeout');
+      logger.error('Forced shutdown after timeout');
+      process.exit(1);
+    }, 10000);
+  };
 
-  } catch (error) {
-    logger.error('Failed to start server:', error);
-    process.exit(1);
-  }
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
 }
 
 // Start the server
