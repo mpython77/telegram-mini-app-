@@ -1,0 +1,404 @@
+{
+  "info": {
+    "name": "Telegram Mini App API",
+    "description": "Complete API collection for Telegram Mini App with 7 game modes",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Init User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telegramId\": 123456789,\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"username\": \"johndoe\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/init",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "init"]
+            }
+          }
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/user/{{userId}}/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "{{userId}}", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Get User Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/user/{{userId}}/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "{{userId}}", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Get Referrals",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/user/{{userId}}/referrals",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "{{userId}}", "referrals"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Games",
+      "item": [
+        {
+          "name": "Play LUCK",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"gameMode\": \"LUCK\",\n  \"betAmount\": 100\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/game/play",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "game", "play"]
+            }
+          }
+        },
+        {
+          "name": "Play SLOTS",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"gameMode\": \"SLOTS\",\n  \"betAmount\": 50\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/game/play",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "game", "play"]
+            }
+          }
+        },
+        {
+          "name": "Play SPIN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"gameMode\": \"SPIN\",\n  \"betAmount\": 100\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/game/play",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "game", "play"]
+            }
+          }
+        },
+        {
+          "name": "Play DICE",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"gameMode\": \"DICE\",\n  \"betAmount\": 100,\n  \"gameOptions\": {\n    \"target\": 50,\n    \"isOver\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/game/play",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "game", "play"]
+            }
+          }
+        },
+        {
+          "name": "Play FLIP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"gameMode\": \"FLIP\",\n  \"betAmount\": 100,\n  \"gameOptions\": {\n    \"prediction\": \"HEADS\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/game/play",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "game", "play"]
+            }
+          }
+        },
+        {
+          "name": "Start CARDS Game",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/game/cards/start",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "game", "cards", "start"]
+            }
+          }
+        },
+        {
+          "name": "Play CARDS",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"gameMode\": \"CARDS\",\n  \"betAmount\": 100,\n  \"gameOptions\": {\n    \"currentCard\": {\n      \"rank\": \"7\",\n      \"suit\": \"♠️\",\n      \"value\": 7\n    },\n    \"cardPrediction\": \"HIGHER\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/game/play",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "game", "play"]
+            }
+          }
+        },
+        {
+          "name": "Play SCRATCH",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"gameMode\": \"SCRATCH\",\n  \"betAmount\": 100\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/game/play",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "game", "play"]
+            }
+          }
+        },
+        {
+          "name": "Get Game History",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/game/{{userId}}/history?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "game", "{{userId}}", "history"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Game Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/game/{{userId}}/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "game", "{{userId}}", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Get Popular Games",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/game/popular",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "game", "popular"]
+            }
+          }
+        },
+        {
+          "name": "Get Big Wins",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/game/bigwins?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "game", "bigwins"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Leaderboard",
+      "item": [
+        {
+          "name": "Get Leaderboard (Coins)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/leaderboard/coins?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leaderboard", "coins"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Leaderboard (Games)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/leaderboard/games?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leaderboard", "games"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User Rank",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/leaderboard/rank/{{userId}}?type=coins",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leaderboard", "rank", "{{userId}}"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "coins"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Achievements",
+      "item": [
+        {
+          "name": "Get All Achievements",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/achievements",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "achievements"]
+            }
+          }
+        },
+        {
+          "name": "Get User Achievements",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/achievements/user/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "achievements", "user", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Achievement Progress",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/achievements/user/{{userId}}/progress",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "achievements", "user", "{{userId}}", "progress"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "health"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "your-user-uuid-here",
+      "type": "string"
+    }
+  ]
+}
