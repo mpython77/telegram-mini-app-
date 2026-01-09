@@ -4,8 +4,8 @@
   "description": "Ultimate Telegram Mini App - 10000x Better Gaming Experience with 7 Game Modes, Real-time Multiplayer, Social Features, and Advanced Economy",
   "main": "server.js",
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
   },
   "scripts": {
     "start": "node server.js",
