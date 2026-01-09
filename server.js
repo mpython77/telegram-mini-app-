@@ -1,83 +1,103 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const helmet = require('helmet');
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+
+const config = require('./config/config');
+const db = require('./config/database');
+const logger = require('./src/utils/logger');
+const { errorHandler, notFoundHandler } = require('./src/middleware/errorHandler');
+
+// Routes
+const apiRoutes = require('./src/routes/api');
+const adminRoutes = require('./src/routes/admin');
+
 const app = express();
 
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable for Telegram WebApp
+}));
+app.use(cors());
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: config.rateLimit.windowMs,
+  max: config.rateLimit.max,
+  message: 'Too many requests from this IP, please try again later.',
+});
+app.use('/api/', limiter);
+
+// Body parser
 app.use(express.json());
-app.use(express.static(__dirname));
+app.use(express.urlencoded({ extended: true }));
 
-// In-memory storage (you can replace with real database later)
-const users = new Map();
-const leaderboard = new Map();
+// Static files
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Save user stats
-app.post('/api/save-stats', (req, res) => {
-  try {
-    const { userId, firstName, lastName, username, score, totalGames, bestScore } = req.body;
-    
-    const userData = {
-      id: userId,
-      firstName,
-      lastName,
-      username,
-      bestScore,
-      totalGames,
-      timestamp: Date.now()
-    };
-    
-    users.set(userId.toString(), userData);
-    leaderboard.set(userId.toString(), userData);
-    
-    res.json({ success: true, data: userData });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Get user stats
-app.get('/api/user-stats/:userId', (req, res) => {
-  try {
-    const userId = req.params.userId;
-    const userData = users.get(userId);
-    
-    if (userData) {
-      res.json({ success: true, data: userData });
-    } else {
-      res.json({ success: true, data: { bestScore: 0, totalGames: 0 } });
-    }
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Get leaderboard
-app.get('/api/leaderboard', (req, res) => {
-  try {
-    const leaderboardArray = Array.from(leaderboard.values())
-      .sort((a, b) => b.bestScore - a.bestScore)
-      .slice(0, 100); // Top 100
-    
-    res.json({ success: true, data: leaderboardArray });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+// API Routes
+app.use('/api', apiRoutes);
+app.use('/admin', adminRoutes);
 
 // Main route
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Admin panel route
+app.get('/admin-panel', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    message: 'Server is running',
-    users: users.size,
-    leaderboard: leaderboard.size
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
   });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+// 404 handler
+app.use(notFoundHandler);
+
+// Error handler
+app.use(errorHandler);
+
+// Initialize database and start server
+async function startServer() {
+  try {
+    // Connect to database
+    await db.connect();
+    logger.info('Database connected successfully');
+
+    // Start server
+    const PORT = config.server.port;
+    app.listen(PORT, '0.0.0.0', () => {
+      logger.info(`🚀 Server running on port ${PORT}`);
+      logger.info(`📱 Environment: ${config.server.env}`);
+      logger.info(`🎮 Telegram Mini App ready!`);
+    });
+  } catch (error) {
+    logger.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+// Handle graceful shutdown
+process.on('SIGINT', async () => {
+  logger.info('Shutting down gracefully...');
+  await db.close();
+  process.exit(0);
 });
+
+process.on('SIGTERM', async () => {
+  logger.info('Shutting down gracefully...');
+  await db.close();
+  process.exit(0);
+});
+
+// Start the server
+startServer();

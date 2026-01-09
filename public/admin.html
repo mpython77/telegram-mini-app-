@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Luck Game</title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Login Screen -->
+        <div id="loginScreen" class="login-screen">
+            <div class="login-card">
+                <h1>🔐 Admin Panel</h1>
+                <p class="subtitle">Telegram Mini App - Luck Game</p>
+                <form id="loginForm">
+                    <input type="text" id="username" placeholder="Username" required>
+                    <input type="password" id="password" placeholder="Password" required>
+                    <button type="submit" class="btn-primary">Login</button>
+                </form>
+                <div id="loginError" class="error-message"></div>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="dashboard" style="display: none;">
+            <!-- Header -->
+            <header class="admin-header">
+                <h1>🎮 Luck Game Admin</h1>
+                <button id="logoutBtn" class="btn-logout">Logout</button>
+            </header>
+
+            <!-- Stats Overview -->
+            <div class="stats-overview">
+                <div class="stat-box">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="totalUsers">-</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon">🎮</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="totalGames">-</div>
+                        <div class="stat-label">Total Games</div>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="averageScore">-</div>
+                        <div class="stat-label">Average Score</div>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon">⚡</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="activeUsers">-</div>
+                        <div class="stat-label">Active (7d)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="admin-tabs">
+                <button class="admin-tab active" data-section="overview">📊 Overview</button>
+                <button class="admin-tab" data-section="users">👥 Users</button>
+                <button class="admin-tab" data-section="games">🎮 Recent Games</button>
+                <button class="admin-tab" data-section="top-players">🏆 Top Players</button>
+            </div>
+
+            <!-- Overview Section -->
+            <div id="overviewSection" class="admin-section active">
+                <h2>📊 System Overview</h2>
+
+                <div class="chart-container">
+                    <h3>Recent Games</h3>
+                    <div id="recentGamesList" class="games-list">
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Section -->
+            <div id="usersSection" class="admin-section">
+                <h2>👥 All Users</h2>
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Best Score</th>
+                                <th>Games</th>
+                                <th>Points</th>
+                                <th>Joined</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr><td colspan="7" class="loading">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Games Section -->
+            <div id="gamesSection" class="admin-section">
+                <h2>🎮 Recent Games</h2>
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Player</th>
+                                <th>Score</th>
+                                <th>Type</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gamesTableBody">
+                            <tr><td colspan="5" class="loading">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Top Players Section -->
+            <div id="topPlayersSection" class="admin-section">
+                <h2>🏆 Top 10 Players</h2>
+                <div id="topPlayersList" class="top-players-list">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/admin.js"></script>
+</body>
+</html>

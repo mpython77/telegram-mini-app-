@@ -1,0 +1,652 @@
+// Prisma Schema for Ultimate Telegram Mini App
+// PostgreSQL Database with 25 tables
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// CORE MODELS
+// ============================================
+
+model User {
+  id              String    @id @default(uuid())
+  telegramId      BigInt    @unique @map("telegram_id")
+  username        String?   @db.VarChar(255)
+  firstName       String    @map("first_name") @db.VarChar(255)
+  lastName        String?   @map("last_name") @db.VarChar(255)
+  avatarUrl       String?   @map("avatar_url") @db.Text
+
+  // Game Stats
+  level           Int       @default(1)
+  experience      Int       @default(0)
+  coins           Int       @default(1000)
+  gems            Int       @default(100)
+  premium         Boolean   @default(false)
+  premiumExpiresAt DateTime? @map("premium_expires_at")
+
+  // Statistics
+  totalGames      Int       @default(0) @map("total_games")
+  totalWins       Int       @default(0) @map("total_wins")
+  bestScore       Int       @default(0) @map("best_score")
+  currentStreak   Int       @default(0) @map("current_streak")
+  longestStreak   Int       @default(0) @map("longest_streak")
+  lastPlayDate    DateTime? @map("last_play_date") @db.Date
+
+  // Customization
+  theme           String    @default("default") @db.VarChar(50)
+  language        String    @default("en") @db.VarChar(10)
+  notificationsEnabled Boolean @default(true) @map("notifications_enabled")
+
+  // Moderation
+  banned          Boolean   @default(false)
+  bannedUntil     DateTime? @map("banned_until")
+
+  // Referrals
+  referrerId      String?   @map("referrer_id")
+  referrer        User?     @relation("Referrals", fields: [referrerId], references: [id])
+  referredUsers   User[]    @relation("Referrals")
+  referralCode    String    @unique @map("referral_code") @db.VarChar(20)
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  games                Game[]
+  multiplayerGames     MultiplayerParticipant[]
+  achievements         UserAchievement[]
+  dailyChallenges      UserDailyChallenge[]
+  seasonLeaderboard    SeasonLeaderboard[]
+  friendsInitiated     Friend[] @relation("UserFriends")
+  friendsReceived      Friend[] @relation("FriendUser")
+  clanMemberships      ClanMember[]
+  ownedClans           Clan[]
+  inventory            UserInventory[]
+  transactions         Transaction[]
+  sentGifts            Gift[] @relation("GiftSender")
+  receivedGifts        Gift[] @relation("GiftReceiver")
+  notifications        Notification[]
+  tournamentParticipations TournamentParticipant[]
+  quests               UserQuest[]
+  boosters             Booster[]
+  analyticsEvents      AnalyticsEvent[]
+  adminLogs            AdminLog[]
+
+  @@index([telegramId])
+  @@index([referralCode])
+  @@index([level])
+  @@index([coins])
+  @@map("users")
+}
+
+model Game {
+  id            String    @id @default(uuid())
+  userId        String    @map("user_id")
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  gameType      GameType  @map("game_type")
+  mode          GameMode
+  score         Int
+  betAmount     Int       @map("bet_amount")
+  winAmount     Int       @map("win_amount")
+  multiplier    Decimal   @db.Decimal(10, 2)
+  resultData    Json      @map("result_data")
+  duration      Int       // milliseconds
+  ipAddress     String?   @map("ip_address") @db.Inet
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([gameType])
+  @@index([createdAt])
+  @@map("games")
+}
+
+enum GameType {
+  SINGLE
+  MULTIPLAYER
+  TOURNAMENT
+  CHALLENGE
+}
+
+enum GameMode {
+  LUCK
+  SLOTS
+  SPIN
+  DICE
+  CARDS
+  FLIP
+  SCRATCH
+}
+
+// ============================================
+// MULTIPLAYER MODELS
+// ============================================
+
+model MultiplayerGame {
+  id              String    @id @default(uuid())
+  roomCode        String    @unique @map("room_code") @db.VarChar(10)
+  hostId          String    @map("host_id")
+  gameMode        GameMode  @map("game_mode")
+  betAmount       Int       @map("bet_amount")
+  maxPlayers      Int       @default(2) @map("max_players")
+  status          MultiplayerStatus
+  winnerId        String?   @map("winner_id")
+
+  startedAt       DateTime? @map("started_at")
+  finishedAt      DateTime? @map("finished_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  participants    MultiplayerParticipant[]
+
+  @@index([roomCode])
+  @@index([status])
+  @@map("multiplayer_games")
+}
+
+enum MultiplayerStatus {
+  WAITING
+  ACTIVE
+  FINISHED
+  CANCELLED
+}
+
+model MultiplayerParticipant {
+  id          String    @id @default(uuid())
+  gameId      String    @map("game_id")
+  game        MultiplayerGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  userId      String    @map("user_id")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  score       Int       @default(0)
+  betAmount   Int       @map("bet_amount")
+  winAmount   Int       @default(0) @map("win_amount")
+  position    Int?
+
+  joinedAt    DateTime  @default(now()) @map("joined_at")
+
+  @@index([gameId])
+  @@index([userId])
+  @@map("multiplayer_participants")
+}
+
+// ============================================
+// ACHIEVEMENTS & PROGRESS
+// ============================================
+
+model Achievement {
+  id                String    @id @default(uuid())
+  code              String    @unique @db.VarChar(100)
+  name              String    @db.VarChar(255)
+  description       String    @db.Text
+  icon              String    @db.VarChar(50)
+  category          String    @db.VarChar(50)
+  tier              AchievementTier
+  requirementType   String    @map("requirement_type") @db.VarChar(50)
+  requirementValue  Int       @map("requirement_value")
+  rewardCoins       Int       @map("reward_coins")
+  rewardGems        Int       @map("reward_gems")
+  rewardExperience  Int       @map("reward_experience")
+  isSecret          Boolean   @default(false) @map("is_secret")
+
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  userAchievements  UserAchievement[]
+
+  @@index([code])
+  @@index([tier])
+  @@map("achievements")
+}
+
+enum AchievementTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+  DIAMOND
+}
+
+model UserAchievement {
+  id              String    @id @default(uuid())
+  userId          String    @map("user_id")
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId   String    @map("achievement_id")
+  achievement     Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  progress        Int       @default(0)
+  unlocked        Boolean   @default(false)
+  unlockedAt      DateTime? @map("unlocked_at")
+  notified        Boolean   @default(false)
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@map("user_achievements")
+}
+
+// ============================================
+// DAILY CHALLENGES & QUESTS
+// ============================================
+
+model DailyChallenge {
+  id                String    @id @default(uuid())
+  challengeDate     DateTime  @map("challenge_date") @db.Date
+  challengeType     String    @map("challenge_type") @db.VarChar(50)
+  requirement       Int
+  rewardCoins       Int       @map("reward_coins")
+  rewardGems        Int       @map("reward_gems")
+  rewardExperience  Int       @map("reward_experience")
+  active            Boolean   @default(true)
+
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  userChallenges    UserDailyChallenge[]
+
+  @@index([challengeDate])
+  @@map("daily_challenges")
+}
+
+model UserDailyChallenge {
+  id            String    @id @default(uuid())
+  userId        String    @map("user_id")
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challengeId   String    @map("challenge_id")
+  challenge     DailyChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  progress      Int       @default(0)
+  completed     Boolean   @default(false)
+  completedAt   DateTime? @map("completed_at")
+  rewardClaimed Boolean   @default(false) @map("reward_claimed")
+  claimedAt     DateTime? @map("claimed_at")
+
+  @@unique([userId, challengeId])
+  @@index([userId])
+  @@map("user_daily_challenges")
+}
+
+model Quest {
+  id            String    @id @default(uuid())
+  type          QuestType
+  name          String    @db.VarChar(255)
+  description   String    @db.Text
+  requirements  Json
+  rewards       Json
+  expiresAt     DateTime? @map("expires_at")
+  active        Boolean   @default(true)
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  userQuests    UserQuest[]
+
+  @@index([type])
+  @@index([active])
+  @@map("quests")
+}
+
+enum QuestType {
+  DAILY
+  WEEKLY
+  SPECIAL
+}
+
+model UserQuest {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questId     String    @map("quest_id")
+  quest       Quest     @relation(fields: [questId], references: [id], onDelete: Cascade)
+
+  progress    Json
+  completed   Boolean   @default(false)
+  completedAt DateTime? @map("completed_at")
+  claimed     Boolean   @default(false)
+
+  @@unique([userId, questId])
+  @@index([userId])
+  @@map("user_quests")
+}
+
+// ============================================
+// SEASONS & TOURNAMENTS
+// ============================================
+
+model Season {
+  id            String    @id @default(uuid())
+  seasonNumber  Int       @unique @map("season_number")
+  name          String    @db.VarChar(255)
+  description   String    @db.Text
+  theme         String    @db.VarChar(50)
+  startDate     DateTime  @map("start_date")
+  endDate       DateTime  @map("end_date")
+  active        Boolean   @default(false)
+  rewards       Json
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  leaderboard   SeasonLeaderboard[]
+
+  @@index([seasonNumber])
+  @@index([active])
+  @@map("seasons")
+}
+
+model SeasonLeaderboard {
+  id              String    @id @default(uuid())
+  seasonId        String    @map("season_id")
+  season          Season    @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  userId          String    @map("user_id")
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  points          Int       @default(0)
+  rank            Int?
+  tier            String?   @db.VarChar(50)
+  rewardsClaimed  Boolean   @default(false) @map("rewards_claimed")
+
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@unique([seasonId, userId])
+  @@index([seasonId])
+  @@index([points])
+  @@map("season_leaderboard")
+}
+
+model Tournament {
+  id                  String    @id @default(uuid())
+  name                String    @db.VarChar(255)
+  description         String    @db.Text
+  entryFee            Int       @map("entry_fee")
+  prizePool           Int       @map("prize_pool")
+  maxParticipants     Int       @map("max_participants")
+  currentParticipants Int       @default(0) @map("current_participants")
+  gameMode            GameMode  @map("game_mode")
+  status              TournamentStatus
+  startTime           DateTime  @map("start_time")
+  endTime             DateTime  @map("end_time")
+  winners             Json?
+
+  createdAt           DateTime  @default(now()) @map("created_at")
+
+  participants        TournamentParticipant[]
+
+  @@index([status])
+  @@index([startTime])
+  @@map("tournaments")
+}
+
+enum TournamentStatus {
+  UPCOMING
+  ACTIVE
+  FINISHED
+}
+
+model TournamentParticipant {
+  id            String    @id @default(uuid())
+  tournamentId  String    @map("tournament_id")
+  tournament    Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  userId        String    @map("user_id")
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  score         Int       @default(0)
+  rank          Int?
+  prize         Int       @default(0)
+
+  joinedAt      DateTime  @default(now()) @map("joined_at")
+
+  @@unique([tournamentId, userId])
+  @@index([tournamentId])
+  @@map("tournament_participants")
+}
+
+// ============================================
+// SOCIAL FEATURES
+// ============================================
+
+model Friend {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  user        User      @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friendId    String    @map("friend_id")
+  friend      User      @relation("FriendUser", fields: [friendId], references: [id], onDelete: Cascade)
+  status      FriendStatus
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([userId, friendId])
+  @@index([userId])
+  @@index([status])
+  @@map("friends")
+}
+
+enum FriendStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
+model Clan {
+  id              String    @id @default(uuid())
+  name            String    @unique @db.VarChar(100)
+  tag             String    @unique @db.VarChar(10)
+  description     String    @db.Text
+  logo            String?   @db.VarChar(255)
+  ownerId         String    @map("owner_id")
+  owner           User      @relation(fields: [ownerId], references: [id])
+  level           Int       @default(1)
+  experience      Int       @default(0)
+  memberCount     Int       @default(1) @map("member_count")
+  maxMembers      Int       @default(50) @map("max_members")
+  totalWins       Int       @default(0) @map("total_wins")
+  isPublic        Boolean   @default(true) @map("is_public")
+  joinRequirements Json?    @map("join_requirements")
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  members         ClanMember[]
+
+  @@index([name])
+  @@index([tag])
+  @@map("clans")
+}
+
+model ClanMember {
+  id            String    @id @default(uuid())
+  clanId        String    @map("clan_id")
+  clan          Clan      @relation(fields: [clanId], references: [id], onDelete: Cascade)
+  userId        String    @unique @map("user_id")
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role          ClanRole
+  contribution  Int       @default(0)
+
+  joinedAt      DateTime  @default(now()) @map("joined_at")
+
+  @@index([clanId])
+  @@map("clan_members")
+}
+
+enum ClanRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+// ============================================
+// ECONOMY & SHOP
+// ============================================
+
+model ShopItem {
+  id              String    @id @default(uuid())
+  type            ItemType
+  name            String    @db.VarChar(255)
+  description     String    @db.Text
+  icon            String    @db.VarChar(255)
+  rarity          ItemRarity
+  priceCoins      Int?      @map("price_coins")
+  priceGems       Int?      @map("price_gems")
+  limited         Boolean   @default(false)
+  availableUntil  DateTime? @map("available_until")
+  active          Boolean   @default(true)
+  data            Json?
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  userInventory   UserInventory[]
+
+  @@index([type])
+  @@index([rarity])
+  @@index([active])
+  @@map("shop_items")
+}
+
+enum ItemType {
+  THEME
+  AVATAR
+  EFFECT
+  BOOST
+}
+
+enum ItemRarity {
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
+}
+
+model UserInventory {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemId      String    @map("item_id")
+  item        ShopItem  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  quantity    Int       @default(1)
+  equipped    Boolean   @default(false)
+
+  acquiredAt  DateTime  @default(now()) @map("acquired_at")
+
+  @@index([userId])
+  @@map("user_inventory")
+}
+
+model Transaction {
+  id            String    @id @default(uuid())
+  userId        String    @map("user_id")
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          String    @db.VarChar(50)
+  amountCoins   Int?      @map("amount_coins")
+  amountGems    Int?      @map("amount_gems")
+  description   String    @db.Text
+  metadata      Json?
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("transactions")
+}
+
+model Gift {
+  id          String    @id @default(uuid())
+  senderId    String    @map("sender_id")
+  sender      User      @relation("GiftSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId  String    @map("receiver_id")
+  receiver    User      @relation("GiftReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  giftType    String    @map("gift_type") @db.VarChar(50)
+  giftData    Json      @map("gift_data")
+  message     String?   @db.Text
+  status      GiftStatus
+
+  sentAt      DateTime  @default(now()) @map("sent_at")
+  receivedAt  DateTime? @map("received_at")
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([status])
+  @@map("gifts")
+}
+
+enum GiftStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+// ============================================
+// SYSTEM & SUPPORT
+// ============================================
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String    @db.VarChar(50)
+  title     String    @db.VarChar(255)
+  message   String    @db.Text
+  data      Json?
+  read      Boolean   @default(false)
+  readAt    DateTime? @map("read_at")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([read])
+  @@map("notifications")
+}
+
+model Booster {
+  id            String    @id @default(uuid())
+  userId        String    @map("user_id")
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  boosterType   String    @map("booster_type") @db.VarChar(50)
+  multiplier    Decimal   @db.Decimal(10, 2)
+  duration      Int       // seconds
+  expiresAt     DateTime  @map("expires_at")
+  active        Boolean   @default(true)
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([active])
+  @@map("boosters")
+}
+
+model AnalyticsEvent {
+  id          String    @id @default(uuid())
+  userId      String?   @map("user_id")
+  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventType   String    @map("event_type") @db.VarChar(100)
+  eventData   Json      @map("event_data")
+  sessionId   String?   @map("session_id")
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("analytics_events")
+}
+
+model AdminLog {
+  id          String    @id @default(uuid())
+  adminId     String    @map("admin_id")
+  admin       User      @relation(fields: [adminId], references: [id])
+  action      String    @db.VarChar(255)
+  targetType  String?   @map("target_type") @db.VarChar(50)
+  targetId    String?   @map("target_id")
+  details     Json?
+  ipAddress   String?   @map("ip_address") @db.Inet
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([adminId])
+  @@index([createdAt])
+  @@map("admin_logs")
+}
