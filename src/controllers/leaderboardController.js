@@ -1,57 +1,30 @@
-const db = require('../../config/database');
-const User = require('../models/User');
-const { calculateRank } = require('../utils/helpers');
+/**
+ * Leaderboard Controller
+ * Handles leaderboard-related HTTP requests
+ */
+
+const LeaderboardService = require('../services/LeaderboardService');
+const logger = require('../utils/logger');
 
 /**
- * Get global leaderboard by best score
+ * Get leaderboard by coins
  */
-async function getLeaderboard(req, res) {
+async function getByCoins(req, res) {
   try {
     const limit = parseInt(req.query.limit) || 100;
     const offset = parseInt(req.query.offset) || 0;
 
-    const users = await db.query(
-      `SELECT
-        id,
-        telegram_id,
-        first_name,
-        last_name,
-        username,
-        best_score,
-        total_games,
-        total_points,
-        current_streak
-       FROM users
-       WHERE total_games > 0
-       ORDER BY best_score DESC, total_games DESC
-       LIMIT ? OFFSET ?`,
-      [limit, offset]
-    );
-
-    const leaderboard = users.map((user, index) => {
-      const rank = calculateRank(user.best_score);
-      return {
-        rank: offset + index + 1,
-        id: user.telegram_id,
-        firstName: user.first_name,
-        lastName: user.last_name,
-        username: user.username,
-        bestScore: user.best_score,
-        totalGames: user.total_games,
-        totalPoints: user.total_points,
-        currentStreak: user.current_streak,
-        rankInfo: rank,
-      };
-    });
+    const leaderboard = await LeaderboardService.getByCoins(limit, offset);
 
     res.json({
       success: true,
-      data: leaderboard
+      data: leaderboard,
     });
   } catch (error) {
+    logger.error('Error getting coins leaderboard:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 }
@@ -59,141 +32,172 @@ async function getLeaderboard(req, res) {
 /**
  * Get leaderboard by total games
  */
-async function getLeaderboardByGames(req, res) {
+async function getByGames(req, res) {
   try {
     const limit = parseInt(req.query.limit) || 100;
+    const offset = parseInt(req.query.offset) || 0;
 
-    const users = await db.query(
-      `SELECT
-        id,
-        telegram_id,
-        first_name,
-        last_name,
-        username,
-        best_score,
-        total_games,
-        total_points
-       FROM users
-       WHERE total_games > 0
-       ORDER BY total_games DESC, best_score DESC
-       LIMIT ?`,
-      [limit]
-    );
-
-    const leaderboard = users.map((user, index) => ({
-      rank: index + 1,
-      id: user.telegram_id,
-      firstName: user.first_name,
-      lastName: user.last_name,
-      username: user.username,
-      bestScore: user.best_score,
-      totalGames: user.total_games,
-      totalPoints: user.total_points,
-    }));
+    const leaderboard = await LeaderboardService.getByGames(limit, offset);
 
     res.json({
       success: true,
-      data: leaderboard
+      data: leaderboard,
     });
   } catch (error) {
+    logger.error('Error getting games leaderboard:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 }
 
 /**
- * Get leaderboard by current streak
+ * Get leaderboard by level
  */
-async function getLeaderboardByStreak(req, res) {
+async function getByLevel(req, res) {
   try {
     const limit = parseInt(req.query.limit) || 100;
+    const offset = parseInt(req.query.offset) || 0;
 
-    const users = await db.query(
-      `SELECT
-        id,
-        telegram_id,
-        first_name,
-        last_name,
-        username,
-        best_score,
-        total_games,
-        current_streak,
-        longest_streak
-       FROM users
-       WHERE current_streak > 0
-       ORDER BY current_streak DESC, longest_streak DESC
-       LIMIT ?`,
-      [limit]
-    );
-
-    const leaderboard = users.map((user, index) => ({
-      rank: index + 1,
-      id: user.telegram_id,
-      firstName: user.first_name,
-      lastName: user.last_name,
-      username: user.username,
-      bestScore: user.best_score,
-      totalGames: user.total_games,
-      currentStreak: user.current_streak,
-      longestStreak: user.longest_streak,
-    }));
+    const leaderboard = await LeaderboardService.getByLevel(limit, offset);
 
     res.json({
       success: true,
-      data: leaderboard
+      data: leaderboard,
     });
   } catch (error) {
+    logger.error('Error getting level leaderboard:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 }
 
 /**
- * Get user's rank
+ * Get leaderboard by streak
+ */
+async function getByStreak(req, res) {
+  try {
+    const limit = parseInt(req.query.limit) || 100;
+    const offset = parseInt(req.query.offset) || 0;
+
+    const leaderboard = await LeaderboardService.getByStreak(limit, offset);
+
+    res.json({
+      success: true,
+      data: leaderboard,
+    });
+  } catch (error) {
+    logger.error('Error getting streak leaderboard:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+/**
+ * Get user rank
  */
 async function getUserRank(req, res) {
   try {
-    const { telegramId } = req.params;
+    const { userId } = req.params;
+    const type = req.query.type || 'coins';
 
-    const user = await User.findByTelegramId(telegramId);
-    if (!user) {
-      return res.json({
-        success: true,
-        data: { rank: null }
-      });
-    }
-
-    const result = await db.get(
-      `SELECT COUNT(*) + 1 as rank
-       FROM users
-       WHERE (best_score > ? OR (best_score = ? AND total_games > ?))
-       AND total_games > 0`,
-      [user.best_score, user.best_score, user.total_games]
-    );
+    const rank = await LeaderboardService.getUserRank(userId, type);
 
     res.json({
       success: true,
-      data: {
-        rank: result.rank,
-        bestScore: user.best_score,
-        totalGames: user.total_games,
-      }
+      data: rank,
     });
   } catch (error) {
+    logger.error('Error getting user rank:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
+    });
+  }
+}
+
+/**
+ * Get season leaderboard
+ */
+async function getSeasonLeaderboard(req, res) {
+  try {
+    const { seasonId } = req.params;
+    const limit = parseInt(req.query.limit) || 100;
+    const offset = parseInt(req.query.offset) || 0;
+
+    const leaderboard = await LeaderboardService.getSeasonLeaderboard(seasonId, limit, offset);
+
+    res.json({
+      success: true,
+      data: leaderboard,
+    });
+  } catch (error) {
+    logger.error('Error getting season leaderboard:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+/**
+ * Get clan leaderboard
+ */
+async function getClanLeaderboard(req, res) {
+  try {
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = parseInt(req.query.offset) || 0;
+
+    const leaderboard = await LeaderboardService.getClanLeaderboard(limit, offset);
+
+    res.json({
+      success: true,
+      data: leaderboard,
+    });
+  } catch (error) {
+    logger.error('Error getting clan leaderboard:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+/**
+ * Get friends leaderboard
+ */
+async function getFriendsLeaderboard(req, res) {
+  try {
+    const { userId } = req.params;
+    const limit = parseInt(req.query.limit) || 50;
+
+    const leaderboard = await LeaderboardService.getFriendsLeaderboard(userId, limit);
+
+    res.json({
+      success: true,
+      data: leaderboard,
+    });
+  } catch (error) {
+    logger.error('Error getting friends leaderboard:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
     });
   }
 }
 
 module.exports = {
-  getLeaderboard,
-  getLeaderboardByGames,
-  getLeaderboardByStreak,
+  getByCoins,
+  getByGames,
+  getByLevel,
+  getByStreak,
   getUserRank,
+  getSeasonLeaderboard,
+  getClanLeaderboard,
+  getFriendsLeaderboard,
 };

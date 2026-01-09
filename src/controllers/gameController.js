@@ -1,88 +1,50 @@
-const User = require('../models/User');
-const Game = require('../models/Game');
-const Achievement = require('../models/Achievement');
-const DailyChallenge = require('../models/DailyChallenge');
-const { generateLuck, getLuckMessage, checkAchievement } = require('../utils/helpers');
-const config = require('../../config/config');
+/**
+ * Game Controller
+ * Handles game-related HTTP requests
+ */
+
+const GameService = require('../services/GameService');
+const UserService = require('../services/UserService');
+const AchievementService = require('../services/AchievementService');
 const logger = require('../utils/logger');
 
 /**
- * Play game and get luck score
+ * Play a game
  */
-async function playGame(req, res) {
+async function play(req, res) {
   try {
-    const { telegramId } = req.body;
+    const { userId, gameMode, betAmount, gameOptions } = req.body;
 
-    if (!telegramId) {
+    if (!userId || !gameMode || !betAmount) {
       return res.status(400).json({
         success: false,
-        error: 'Telegram ID required'
+        error: 'User ID, game mode, and bet amount are required',
       });
     }
 
-    // Get or create user
-    const user = await User.findByTelegramId(telegramId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: 'User not found. Please initialize user first.'
-      });
-    }
+    // Play game
+    const result = await GameService.play(userId, gameMode, betAmount, {
+      ...gameOptions,
+      ipAddress: req.ip,
+    });
 
-    // Generate luck score
-    const score = generateLuck();
-    const luckData = getLuckMessage(score);
-
-    // Save game
-    await Game.create(user.id, score);
-
-    // Update user stats
-    const updatedUser = await User.updateStats(user.id, score);
-
-    // Check daily challenge
-    const challengeResult = await DailyChallenge.checkAndComplete(user.id, score);
-
-    // Check and unlock achievements
-    const newAchievements = [];
-    for (const achievement of config.achievements) {
-      const hasIt = await Achievement.hasAchievement(user.id, achievement.id);
-      if (!hasIt) {
-        const unlocked = checkAchievement(achievement, {
-          totalGames: updatedUser.total_games,
-          bestScore: updatedUser.best_score,
-          longestStreak: updatedUser.longest_streak,
-        });
-
-        if (unlocked) {
-          await Achievement.unlock(user.id, achievement.id);
-          newAchievements.push(achievement);
-        }
-      }
-    }
+    // Check for new achievements
+    const newAchievements = await AchievementService.checkAndUnlock(userId);
 
     res.json({
       success: true,
       data: {
-        score,
-        message: luckData.message,
-        emoji: luckData.emoji,
-        color: luckData.color,
-        stats: {
-          bestScore: updatedUser.best_score,
-          totalGames: updatedUser.total_games,
-          currentStreak: updatedUser.current_streak,
-        },
-        challengeResult,
-        newAchievements,
-      }
+        game: result.game,
+        result: result.result,
+        userUpdate: result.userUpdate,
+        newAchievements: newAchievements.length > 0 ? newAchievements : undefined,
+      },
     });
-
-    logger.info(`Game played: User ${telegramId}, Score: ${score}`);
   } catch (error) {
-    logger.error('Play game error:', error);
-    res.status(500).json({
+    logger.error('Error playing game:', error);
+    res.status(400).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 }
@@ -90,136 +52,162 @@ async function playGame(req, res) {
 /**
  * Get game history
  */
-async function getGameHistory(req, res) {
+async function getHistory(req, res) {
   try {
-    const { telegramId } = req.params;
+    const { userId } = req.params;
     const limit = parseInt(req.query.limit) || 50;
+    const offset = parseInt(req.query.offset) || 0;
+    const gameMode = req.query.gameMode || null;
 
-    const user = await User.findByTelegramId(telegramId);
-    if (!user) {
-      return res.json({
-        success: true,
-        data: []
-      });
-    }
-
-    const games = await Game.getUserGames(user.id, limit);
+    const history = await GameService.getHistory(userId, limit, offset, gameMode);
 
     res.json({
       success: true,
-      data: games
+      data: history,
     });
   } catch (error) {
+    logger.error('Error getting game history:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 }
 
 /**
- * Get user's achievements
+ * Get game stats
  */
-async function getAchievements(req, res) {
+async function getStats(req, res) {
   try {
-    const { telegramId } = req.params;
+    const { userId } = req.params;
+    const gameMode = req.query.gameMode || null;
 
-    const user = await User.findByTelegramId(telegramId);
-    if (!user) {
-      return res.json({
-        success: true,
-        data: {
-          unlocked: [],
-          locked: config.achievements,
-          progress: { unlocked: 0, total: config.achievements.length, percentage: 0 }
-        }
-      });
-    }
-
-    const unlockedAchievements = await Achievement.getUserAchievements(user.id);
-    const unlockedIds = unlockedAchievements.map(a => a.id);
-    const lockedAchievements = config.achievements.filter(a => !unlockedIds.includes(a.id));
-    const progress = await Achievement.getProgress(user.id);
+    const stats = await GameService.getStats(userId, gameMode);
 
     res.json({
       success: true,
-      data: {
-        unlocked: unlockedAchievements,
-        locked: lockedAchievements,
-        progress,
-      }
+      data: stats,
     });
   } catch (error) {
+    logger.error('Error getting game stats:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 }
 
 /**
- * Get today's daily challenge
+ * Get global game stats
  */
-async function getDailyChallenge(req, res) {
+async function getGlobalStats(req, res) {
   try {
-    const { telegramId } = req.params;
+    const gameMode = req.query.gameMode || null;
 
-    const user = await User.findByTelegramId(telegramId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: 'User not found'
-      });
-    }
-
-    const challenge = await DailyChallenge.getTodayChallenge(user.id);
-    const stats = await DailyChallenge.getStats(user.id);
+    const stats = await GameService.getGlobalStats(gameMode);
 
     res.json({
       success: true,
-      data: {
-        challenge,
-        stats,
-      }
+      data: stats,
     });
   } catch (error) {
+    logger.error('Error getting global stats:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 }
 
 /**
- * Claim daily challenge reward
+ * Get popular games
  */
-async function claimChallengeReward(req, res) {
+async function getPopular(req, res) {
   try {
-    const { telegramId } = req.body;
+    const games = await GameService.getPopularGames();
 
-    const user = await User.findByTelegramId(telegramId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: 'User not found'
-      });
-    }
-
-    const result = await DailyChallenge.claimReward(user.id);
-
-    res.json(result);
+    res.json({
+      success: true,
+      data: games,
+    });
   } catch (error) {
+    logger.error('Error getting popular games:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
+    });
+  }
+}
+
+/**
+ * Get recent big wins
+ */
+async function getBigWins(req, res) {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+
+    const wins = await GameService.getRecentBigWins(limit);
+
+    res.json({
+      success: true,
+      data: wins,
+    });
+  } catch (error) {
+    logger.error('Error getting big wins:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+/**
+ * Start CARDS game (get first card)
+ */
+async function startCards(req, res) {
+  try {
+    const result = GameService.startCardsGame();
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    logger.error('Error starting cards game:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+/**
+ * Get SPIN wheel segments
+ */
+async function getSpinSegments(req, res) {
+  try {
+    const segments = GameService.getSpinSegments();
+
+    res.json({
+      success: true,
+      data: segments,
+    });
+  } catch (error) {
+    logger.error('Error getting spin segments:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
     });
   }
 }
 
 module.exports = {
-  playGame,
-  getGameHistory,
-  getAchievements,
-  getDailyChallenge,
-  claimChallengeReward,
+  play,
+  getHistory,
+  getStats,
+  getGlobalStats,
+  getPopular,
+  getBigWins,
+  startCards,
+  getSpinSegments,
 };
