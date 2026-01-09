@@ -41,7 +41,14 @@ async function start() {
   console.log('');
 
   // Start the server
-  require('../server.js');
+  try {
+    require('../server.js');
+    console.log('✅ Server script loaded');
+  } catch (error) {
+    console.error('❌ Failed to load server.js:', error);
+    console.error('Stack:', error.stack);
+    throw error;
+  }
 }
 
 // Handle errors
